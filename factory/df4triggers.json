@@ -1,0 +1,9 @@
+{
+	"name": "df4triggers",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "7501d19e-59e4-4df4-81f2-26dbb8db21df",
+		"tenantId": "deabd8cd-68f9-4a2b-a7da-015ea664f533"
+	}
+}
