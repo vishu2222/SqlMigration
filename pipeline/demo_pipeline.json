@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Lookup1",
+				"name": "Lookup Insert Audit",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -40,11 +40,11 @@
 				}
 			},
 			{
-				"name": "Set variable1",
+				"name": "Set variable batch Id",
 				"type": "SetVariable",
 				"dependsOn": [
 					{
-						"activity": "Lookup1",
+						"activity": "Lookup Insert Audit",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -54,17 +54,17 @@
 				"typeProperties": {
 					"variableName": "batch_id",
 					"value": {
-						"value": "@string(activity('Lookup1').output.firstrow.batchId)\n",
+						"value": "@string(activity('Lookup Insert Audit').output.firstrow.batchId)\n",
 						"type": "Expression"
 					}
 				}
 			},
 			{
-				"name": "Lookup2",
+				"name": "Lookup list table",
 				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "Set variable1",
+						"activity": "Set variable batch Id",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -96,11 +96,11 @@
 				}
 			},
 			{
-				"name": "Filter1",
+				"name": "Filter Table",
 				"type": "Filter",
 				"dependsOn": [
 					{
-						"activity": "Lookup2",
+						"activity": "Lookup list table",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -109,7 +109,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"items": {
-						"value": "@activity('Lookup2').output.value",
+						"value": "@activity('Lookup list table').output.value",
 						"type": "Expression"
 					},
 					"condition": {
@@ -119,11 +119,11 @@
 				}
 			},
 			{
-				"name": "Lookup3",
+				"name": "Lookup update audit",
 				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "ForEach1",
+						"activity": "ForEach source to bronze",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -154,17 +154,103 @@
 				}
 			},
 			{
-				"name": "ForEach1",
+				"name": "ForEach source to bronze",
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Filter1",
+						"activity": "Filter Table",
 						"dependencyConditions": [
 							"Succeeded"
 						]
 					}
 				],
-				"userProperties": []
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter Table').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy source to bronze",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"additionalColumns": [
+										{
+											"name": "batchid",
+											"value": {
+												"value": "@variables('batch_id')",
+												"type": "Expression"
+											}
+										}
+									],
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "SqlServerTable1",
+									"type": "DatasetReference",
+									"parameters": {
+										"tableName": {
+											"value": "@item().tableNames",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DelimitedText1",
+									"type": "DatasetReference",
+									"parameters": {
+										"container": "bronze",
+										"folder": {
+											"value": "@first(split(item().tableNames,'.'))",
+											"type": "Expression"
+										},
+										"file": {
+											"value": "@last(split(item().tableNames,'.'))",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
 			}
 		],
 		"variables": {
