@@ -1,135 +1,11 @@
 {
-	"name": "pipeline2",
+	"name": "test-pipeline",
 	"properties": {
 		"activities": [
 			{
-				"name": "Lookup1",
-				"type": "Lookup",
-				"dependsOn": [
-					{
-						"activity": "Set variable1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "SqlServerSource",
-						"sqlReaderStoredProcedureName": "[dbo].[get_tables]",
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
-					},
-					"dataset": {
-						"referenceName": "SqlServerTable1",
-						"type": "DatasetReference",
-						"parameters": {
-							"tableName": "INFORMATION_SCHEMA.TABLES"
-						}
-					},
-					"firstRowOnly": false
-				}
-			},
-			{
-				"name": "Filter1",
-				"type": "Filter",
-				"dependsOn": [
-					{
-						"activity": "Lookup1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('Lookup1').output.value",
-						"type": "Expression"
-					},
-					"condition": {
-						"value": "@startswith(item().tableNames, 'person')",
-						"type": "Expression"
-					}
-				}
-			},
-			{
-				"name": "Lookup1_copy1",
+				"name": "Lookup update audit",
 				"type": "Lookup",
 				"dependsOn": [],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "SqlServerSource",
-						"sqlReaderStoredProcedureName": "[dbo].[insertAudit]",
-						"storedProcedureParameters": {
-							"runId": {
-								"type": "String",
-								"value": {
-									"value": "@pipeline().RunId",
-									"type": "Expression"
-								}
-							}
-						},
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
-					},
-					"dataset": {
-						"referenceName": "SqlServerTable1",
-						"type": "DatasetReference",
-						"parameters": {
-							"tableName": "INFORMATION_SCHEMA.TABLES"
-						}
-					},
-					"firstRowOnly": true
-				}
-			},
-			{
-				"name": "Set variable1",
-				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "Lookup1_copy1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "batchId",
-					"value": {
-						"value": "@string(activity('Lookup1_copy1').output.firstrow.batchId)",
-						"type": "Expression"
-					}
-				}
-			},
-			{
-				"name": "Lookup1_copy1_copy1",
-				"type": "Lookup",
-				"dependsOn": [
-					{
-						"activity": "Filter1",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -160,8 +36,7 @@
 						"parameters": {
 							"tableName": "INFORMATION_SCHEMA.TABLES"
 						}
-					},
-					"firstRowOnly": false
+					}
 				}
 			}
 		],
