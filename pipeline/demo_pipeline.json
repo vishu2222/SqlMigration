@@ -141,6 +141,15 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderStoredProcedureName": "[dbo].[updateAudit]",
+						"storedProcedureParameters": {
+							"runId": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
