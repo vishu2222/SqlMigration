@@ -123,7 +123,7 @@
 				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "gold address",
+						"activity": "silver to gold",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -262,8 +262,35 @@
 				}
 			},
 			{
-				"name": "Notebook bronze to  silver",
+				"name": "silver to gold",
 				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "Execute Pipeline bronze to silver",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Repos/vishwanathreddyaenugu@gmail.com/adb/ingestion/gold_master"
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureDatabricks1",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Execute Pipeline bronze to silver",
+				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
 						"activity": "ForEach source to bronze",
@@ -272,52 +299,13 @@
 						]
 					}
 				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
 				"userProperties": [],
 				"typeProperties": {
-					"notebookPath": "/Repos/vishwanathreddyaenugu@gmail.com/adb/ingestion/bronze-to-silver",
-					"baseParameters": {
-						"source": "db_bronze.Person_Address",
-						"target": "db_Silver.Person_Address",
-						"target_path": "abfss://silver@vishu.dfs.core.windows.net/Person/Address"
-					}
-				},
-				"linkedServiceName": {
-					"referenceName": "AzureDatabricks1",
-					"type": "LinkedServiceReference"
-				}
-			},
-			{
-				"name": "gold address",
-				"type": "DatabricksNotebook",
-				"dependsOn": [
-					{
-						"activity": "Notebook bronze to  silver",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"notebookPath": "/Repos/vishwanathreddyaenugu@gmail.com/adb/ingestion/gold-address"
-				},
-				"linkedServiceName": {
-					"referenceName": "AzureDatabricks1",
-					"type": "LinkedServiceReference"
+					"pipeline": {
+						"referenceName": "bronze-to-silver",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
 				}
 			}
 		],

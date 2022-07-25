@@ -1,0 +1,91 @@
+{
+	"name": "bronze-to-silver",
+	"properties": {
+		"activities": [
+			{
+				"name": "Look up fetch trigger",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SqlServerTable1",
+						"type": "DatasetReference",
+						"parameters": {
+							"tableName": "dbo.config_ingestion"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "bronze to silver",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Look up fetch trigger",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Look up fetch trigger').output.value ",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Notebook bronze to  silver",
+							"type": "DatabricksNotebook",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Repos/vishwanathreddyaenugu@gmail.com/adb/ingestion/bronze-to-silver",
+								"baseParameters": {
+									"source": {
+										"value": "@item().source",
+										"type": "Expression"
+									},
+									"target": {
+										"value": "@item().target",
+										"type": "Expression"
+									},
+									"target_path": {
+										"value": "@item().target_path",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "AzureDatabricks1",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"annotations": []
+	}
+}
