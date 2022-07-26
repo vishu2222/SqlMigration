@@ -1,0 +1,32 @@
+{
+	"name": "TRG _ ADVENTURE_WORKS",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "demo_pipeline",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-07-26T17:06:00",
+				"timeZone": "GMT Standard Time",
+				"schedule": {
+					"minutes": [
+						15
+					],
+					"hours": [
+						18
+					]
+				}
+			}
+		}
+	}
+}
