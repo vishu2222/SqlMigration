@@ -25,10 +25,10 @@
 						"referenceName": "SqlServerTable1",
 						"type": "DatasetReference",
 						"parameters": {
-							"tableName": "auditRun"
+							"tableName": "INFORMATION_SCHEMA.TABLES"
 						}
 					},
-					"firstRowOnly": false
+					"firstRowOnly": true
 				}
 			}
 		],
