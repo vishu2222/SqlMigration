@@ -1,9 +1,9 @@
 {
-	"name": "demo_pipeline",
+	"name": "practice",
 	"properties": {
 		"activities": [
 			{
-				"name": "Lookup Insert Audit",
+				"name": "insert audit",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -18,15 +18,6 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderStoredProcedureName": "[dbo].[insertAudit]",
-						"storedProcedureParameters": {
-							"runId": {
-								"type": "String",
-								"value": {
-									"value": "@pipeline().RunId",
-									"type": "Expression"
-								}
-							}
-						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -34,222 +25,10 @@
 						"referenceName": "SqlServerTable1",
 						"type": "DatasetReference",
 						"parameters": {
-							"tableName": "INFORMATION_SCHEMA.TABLES"
-						}
-					}
-				}
-			},
-			{
-				"name": "Set variable batch Id",
-				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "Lookup Insert Audit",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "batch_id",
-					"value": {
-						"value": "@string(activity('Lookup Insert Audit').output.firstrow.batchId)\n",
-						"type": "Expression"
-					}
-				}
-			},
-			{
-				"name": "Lookup list table",
-				"type": "Lookup",
-				"dependsOn": [
-					{
-						"activity": "Set variable batch Id",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "SqlServerSource",
-						"sqlReaderStoredProcedureName": "[dbo].[get_tables]",
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
-					},
-					"dataset": {
-						"referenceName": "SqlServerTable1",
-						"type": "DatasetReference",
-						"parameters": {
-							"tableName": "INFORMATION_SCHEMA.TABLES"
+							"tableName": "auditRun"
 						}
 					},
 					"firstRowOnly": false
-				}
-			},
-			{
-				"name": "Filter Table",
-				"type": "Filter",
-				"dependsOn": [
-					{
-						"activity": "Lookup list table",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('Lookup list table').output.value",
-						"type": "Expression"
-					},
-					"condition": {
-						"value": "@startswith(item().tableNames,'person')",
-						"type": "Expression"
-					}
-				}
-			},
-			{
-				"name": "Lookup update audit",
-				"type": "Lookup",
-				"dependsOn": [
-					{
-						"activity": "ForEach source to bronze",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "7.00:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "SqlServerSource",
-						"sqlReaderStoredProcedureName": "[dbo].[updateAudit]",
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
-					},
-					"dataset": {
-						"referenceName": "SqlServerTable1",
-						"type": "DatasetReference",
-						"parameters": {
-							"tableName": "INFORMATION_SCHEMA.TABLES"
-						}
-					}
-				}
-			},
-			{
-				"name": "ForEach source to bronze",
-				"type": "ForEach",
-				"dependsOn": [
-					{
-						"activity": "Filter Table",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "@activity('Filter Table').output.value",
-						"type": "Expression"
-					},
-					"activities": [
-						{
-							"name": "Copy source to bronze",
-							"type": "Copy",
-							"dependsOn": [],
-							"policy": {
-								"timeout": "7.00:00:00",
-								"retry": 0,
-								"retryIntervalInSeconds": 30,
-								"secureOutput": false,
-								"secureInput": false
-							},
-							"userProperties": [],
-							"typeProperties": {
-								"source": {
-									"type": "SqlServerSource",
-									"additionalColumns": [
-										{
-											"name": "batchid",
-											"value": {
-												"value": "@variables('batch_id')",
-												"type": "Expression"
-											}
-										}
-									],
-									"queryTimeout": "02:00:00",
-									"partitionOption": "None"
-								},
-								"sink": {
-									"type": "DelimitedTextSink",
-									"storeSettings": {
-										"type": "AzureBlobStorageWriteSettings"
-									},
-									"formatSettings": {
-										"type": "DelimitedTextWriteSettings",
-										"quoteAllText": true,
-										"fileExtension": ".txt"
-									}
-								},
-								"enableStaging": false,
-								"translator": {
-									"type": "TabularTranslator",
-									"typeConversion": true,
-									"typeConversionSettings": {
-										"allowDataTruncation": true,
-										"treatBooleanAsNumber": false
-									}
-								}
-							},
-							"inputs": [
-								{
-									"referenceName": "SqlServerTable1",
-									"type": "DatasetReference",
-									"parameters": {
-										"tableName": {
-											"value": "@item().tableNames",
-											"type": "Expression"
-										}
-									}
-								}
-							],
-							"outputs": [
-								{
-									"referenceName": "DelimitedText1",
-									"type": "DatasetReference",
-									"parameters": {
-										"container": "bronze",
-										"folder": {
-											"value": "@first(split(item().tableNames,'.'))",
-											"type": "Expression"
-										},
-										"file": {
-											"value": "@last(split(item().tableNames,'.'))",
-											"type": "Expression"
-										}
-									}
-								}
-							]
-						}
-					]
 				}
 			}
 		],
