@@ -1,0 +1,6 @@
+{
+	"name": "SSIntegrationRuntime",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}
