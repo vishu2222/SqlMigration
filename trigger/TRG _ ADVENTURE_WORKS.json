@@ -14,7 +14,7 @@
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
-				"frequency": "Day",
+				"frequency": "Month",
 				"interval": 1,
 				"startTime": "2022-07-26T17:06:00",
 				"timeZone": "GMT Standard Time",
@@ -24,6 +24,9 @@
 					],
 					"hours": [
 						18
+					],
+					"monthDays": [
+						-1
 					]
 				}
 			}
