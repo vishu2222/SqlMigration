@@ -18,6 +18,15 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderStoredProcedureName": "[dbo].[insertAudit]",
+						"storedProcedureParameters": {
+							"runId": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
